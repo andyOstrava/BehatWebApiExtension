@@ -90,6 +90,19 @@ class WebApiContext implements ApiClientAwareContext
     }
 
     /**
+     * forcibly sets a HTTP Header.
+     *
+     * @param string $name  header name
+     * @param string $value header value
+     *
+     * @Given /^I forcibly set header "([^"]*)" with value "([^"]*)"$/
+     */
+    public function iForciblySetHeaderWithValue($name, $value)
+    {
+        $this->headers[$name] = $value;
+    }
+
+    /**
      * Sends HTTP request to specific relative URL.
      *
      * @param string $method request method
@@ -114,6 +127,21 @@ class WebApiContext implements ApiClientAwareContext
     }
 
     /**
+     * Sends HTTP request to specific relative URL.
+     *
+     * @param string $method request method
+     * @param string $url    relative url
+     *
+     * @When /^(?:I )?send ([0-9]*) ([A-Z]+) requests to "([^"]+)"$/
+     */
+    public function iSendRequests($requestCount, $method, $url)
+    {
+        for ($i = 0; $i<$requestCount; $i++) {
+            $this->iSendARequest($method, $url);
+        }
+    }
+
+    /**
      * Sends HTTP request to specific URL with field values from Table.
      *
      * @param string    $method request method
@@ -132,7 +160,7 @@ class WebApiContext implements ApiClientAwareContext
         }
 
         $bodyOption = array(
-          'body' => json_encode($fields),
+            'body' => json_encode($fields),
         );
 
         if (version_compare(ClientInterface::VERSION, '6.0', '>=')) {
@@ -196,8 +224,8 @@ class WebApiContext implements ApiClientAwareContext
 
         if (version_compare(ClientInterface::VERSION, '6.0', '>=')) {
             $this->addHeader('Content-Type', 'application/x-www-form-urlencoded');
-	    $this->request = new Request($method, $url, $this->headers, http_build_query($fields, null, '&'));
-	} else {
+            $this->request = new Request($method, $url, $this->headers, http_build_query($fields, null, '&'));
+        } else {
             $this->request = $this->getClient()->createRequest($method, $url);
             /** @var \GuzzleHttp\Post\PostBodyInterface $requestBody */
             $requestBody = $this->request->getBody();
@@ -207,6 +235,22 @@ class WebApiContext implements ApiClientAwareContext
         }
 
         $this->sendRequest();
+    }
+
+    /**
+     * Sends HTTP request to specific URL with form data from PyString.
+     *
+     * @param string       $method request method
+     * @param string       $url    relative url
+     * @param PyStringNode $body   request body
+     *
+     * @When /^(?:I )?send ([0-9]*) ([A-Z]+) requests to "([^"]+)" with form data:$/
+     */
+    public function iSendRequestsWithFormData($requestCount, $method, $url, PyStringNode $body)
+    {
+        for ($i = 0; $i<$requestCount; $i++) {
+            $this->iSendARequestWithFormData($method, $url, $body);
+        }
     }
 
     /**
@@ -269,13 +313,13 @@ class WebApiContext implements ApiClientAwareContext
 
         if (null === $etalon) {
             throw new \RuntimeException(
-              "Can not convert etalon to json:\n" . $this->replacePlaceHolder($jsonString->getRaw())
+                "Can not convert etalon to json:\n" . $this->replacePlaceHolder($jsonString->getRaw())
             );
         }
 
         if (null === $actual) {
             throw new \RuntimeException(
-              "Can not convert actual to json:\n" . $this->replacePlaceHolder((string) $this->response->getBody())
+                "Can not convert actual to json:\n" . $this->replacePlaceHolder((string) $this->response->getBody())
             );
         }
 
